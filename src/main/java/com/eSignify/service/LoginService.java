@@ -9,15 +9,16 @@ import com.eSignify.common.CommonDao;
 @Service
 public class LoginService {
 	
-	@Autowired 
+	@Autowired
 	CommonDao commonDao;
+	
+	String queryId = "loginMapper";
 	
 	public int loginChk(Map<String, Object> multiList){
 		
 		System.out.println(multiList.toString());
 		
-		Object result = commonDao.selectOne("selectUser", multiList); // CommonDao를 통해 쿼리 실행
-		
+		Object result = commonDao.selectOne(queryId+".selectUser", multiList);
 		
 		return 1;
 		

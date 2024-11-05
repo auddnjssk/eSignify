@@ -23,7 +23,6 @@ public class LoginController {
 
 	@GetMapping("/loginChk")
 	public String loginChk() {
-		System.out.println("메인 페이지 진입 Get");
 		
 
 		return "index";
@@ -32,13 +31,7 @@ public class LoginController {
  	@PostMapping("/loginChk")
  	public void loginChk(HttpServletRequest request,
  			@RequestBody List<Map<String, Object>> multiList, HttpSession session) throws Exception {
- 		System.out.println("메인 페이지 진입");
  		loginService.loginChk(multiList.get(0));
- 		
-
- 		//String userId = request.getHeader("LIS-User-ID");
- 		
- 		
  	}
  	
  	

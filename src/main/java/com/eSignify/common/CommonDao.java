@@ -1,66 +1,45 @@
-/**
- *  Description : Repository ê¸°ë°˜ CRUD (Create, Retrieve, Update, Delete) ì‘ì—… ìˆ˜í–‰ì„ ìœ„í•œ ê³µí†µ DAO ì¸í„°í˜ì´ìŠ¤
- *  Modification Information
- * 
- *     ìˆ˜ì •ì¼         ìˆ˜ì •ì                   ìˆ˜ì •ë‚´ìš©
- *   -------    --------    ---------------------------
- *   2022.07.14    ì„œê²½ì§„          ìµœì´ˆ ìƒì„±
- *
- *  @author AA ì„œê²½ì§„
- *  @since 2022. 07. 14
- *  @version 1.0
- *  @see 
- * 
- *  Copyright (C) 2022 by Seegene.mf  All right reserved.
- */
+
+
 package com.eSignify.common;
 
 import java.util.List;
-import java.util.Map;
 
-import org.apache.ibatis.cursor.Cursor;
+import org.apache.ibatis.session.SqlSession;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Repository;
 
-/**
- * 
- * CRUD ì‘ì—…ì„ ì§€ì›í•˜ëŠ” ê³µí†µ DAO ì¸í„°í˜ì´ìŠ¤.
- * 
- */
-public interface CommonDao {
-   
-   public <T> T selectOne(String queryId, Map<String, ?> parameter);
-   
-   public <T> T selectOne(String queryId, Object parameter);
+@Repository
+public class CommonDao {
 
-   public Map<String, ?> selectMap(String queryId, Map<String, ?> parameter, String mapKey);
-    
-    public List selectList(String queryId, Object parameter);
-    
-    public List selectList(String queryId, Map<String, ?> parameter);
-    
-    public <T> Cursor<T> selectCursor(String queryId, Map<String, ?> parameter);
-    
-    public <T> Cursor<T> selectCursor(String queryId, Object parameter);
-    
-    public int insert(String queryId, Map<String, ?> parameter);
-    
-    public int insert(String queryId, Object parameter);
-    
-    public int update(String queryId, Map<String, ?> parameter);
-    
-    public int update(String queryId, Object parameter);
-    
-   public int delete(String queryId, Map<String, ?> parameter);
-   
-   public int delete(String queryId, Object parameter);
-   
-   public int call(String queryId, Map<String, ?> parameter);
-   
-   public int call(String queryId, Object parameter);
-   
-   public int insertBatch(String queryId, List<?> parameterList);
-   
-   public int updateBatch(String queryId, List<?> parameterList);
-   
-   public int deleteBatch(String queryId, List<?> parameterList);
+    private final SqlSession sqlSession;
 
+    @Autowired
+    public CommonDao(SqlSession sqlSession) {
+        this.sqlSession = sqlSession;
+    }
+
+    // ´ÜÀÏ °á°ú Á¶È¸
+    public <T> T selectOne(String queryId, Object parameter) {
+        return sqlSession.selectOne(queryId, parameter);
+    }
+
+    // ¿©·¯ °á°ú Á¶È¸
+    public <E> List<E> selectList(String queryId, Object parameter) {
+        return sqlSession.selectList(queryId, parameter);
+    }
+
+    // µ¥ÀÌÅÍ »ğÀÔ
+    public int insert(String queryId, Object parameter) {
+        return sqlSession.insert(queryId, parameter);
+    }
+
+    // µ¥ÀÌÅÍ ¾÷µ¥ÀÌÆ®
+    public int update(String queryId, Object parameter) {
+        return sqlSession.update(queryId, parameter);
+    }
+
+    // µ¥ÀÌÅÍ »èÁ¦
+    public int delete(String queryId, Object parameter) {
+        return sqlSession.delete(queryId, parameter);
+    }
 }
