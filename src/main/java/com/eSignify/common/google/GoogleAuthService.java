@@ -20,11 +20,10 @@ public class GoogleAuthService {
 	@Value("${my.client_secret}")
 	private String clientSecret;
 	
-	
-    public String getAccessToken(String authorizationCode) {
+    public ResponseEntity<String> getAccessToken(String authorizationCode) {
+    	
         String url = "https://oauth2.googleapis.com/token";
 
-        // ¿äÃ» ¹Ùµð ¼³Á¤ 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
 
@@ -35,14 +34,14 @@ public class GoogleAuthService {
                              "&grant_type=authorization_code";
 
         HttpEntity<String> entity = new HttpEntity<>(requestBody, headers);
-
-        // ¿äÃ» Àü¼Û
+        
         ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.POST, entity, String.class);
         
         if (response.getStatusCode() == HttpStatus.OK) {
-            // ÀÀ´ä¿¡¼­ ¾×¼¼½º ÅäÅ« ÃßÃâ
+            // authorizationCode ë°œê¸‰ì™„ë£Œ 
             JSONObject json = new JSONObject(response.getBody());
-            return json.getString("access_token");
+            return ResponseEntity.ok("Login successful");
+
         } else {
             throw new RuntimeException("Failed to get access token: " + response.getStatusCode());
         }
