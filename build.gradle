@@ -26,6 +26,8 @@ dependencies {
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 	implementation 'org.springframework.boot:spring-boot-starter-jdbc'
+	implementation 'org.json:json:20210307'
+	
 	
 	implementation 'org.mybatis.spring.boot:mybatis-spring-boot-starter:3.0.1'
 	
@@ -36,8 +38,10 @@ dependencies {
 	//implementation 'org.springframework.boot:spring-boot-starter-thymeleaf' // 타임리프로 쉽게 웹 화면 구성을 위함
 	implementation 'org.springframework.boot:spring-boot-starter-web' // mvc 웹 구조 사용을 위함
 
-	// JSP를 사용하기위해 추가 
-	//implementation 'javax.servlet:jstl'    
+	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.0.2' // Swagger 사용을 위함
+	implementation group: 'io.springfox', name: 'springfox-swagger2', version: '3.0.0'
+	
+	
 	implementation group: 'org.glassfish.web', name: 'jakarta.servlet.jsp.jstl', version: '2.0.0' // Sprign 3.0 이상 
 	implementation "org.apache.tomcat.embed:tomcat-embed-jasper"
 	

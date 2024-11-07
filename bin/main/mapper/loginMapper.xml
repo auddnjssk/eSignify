@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="loginMapper">
+    
+    <select id="selectUser" parameterType="String" resultType="com.eSignify.model.User">
+        SELECT COUNT(*) AS USER_CNT
+        FROM T_USER
+		WHERE 1=1
+		AND PASSWORD    = #{passWord}
+		AND USER_ID 	= #{userId}
+    </select>
+
+</mapper>
