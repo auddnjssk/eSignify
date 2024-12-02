@@ -1,4 +1,4 @@
-package com.eSignify.common.kakao;
+package com.eSignify.common.kakao.service;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
@@ -9,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import com.eSignify.common.kakao.AccessTokenResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.springframework.util.LinkedMultiValueMap;

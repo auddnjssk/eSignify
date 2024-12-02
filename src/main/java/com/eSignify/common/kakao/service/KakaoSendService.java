@@ -1,4 +1,4 @@
-package com.eSignify.common.kakao;
+package com.eSignify.common.kakao.service;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -10,6 +10,8 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
+
+import com.eSignify.common.kakao.AccessTokenResponse;
 
 @Service
 public class KakaoSendService {
