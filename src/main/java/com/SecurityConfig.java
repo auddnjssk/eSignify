@@ -16,13 +16,13 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-            .csrf(csrf -> csrf.disable()) // REST API »ç¿ë ½Ã¿¡´Â CSRF ºñÈ°¼ºÈ­
-            .authorizeHttpRequests((requests) -> requests
-                .requestMatchers("/login", "/register").permitAll() // ·Î±×ÀÎ, È¸¿ø°¡ÀÔÀº ¸ğµÎ Çã¿ë
-                .anyRequest().authenticated() // ³ª¸ÓÁö ¿äÃ»Àº ÀÎÁõ ÇÊ¿ä
+            .csrf(csrf -> csrf.disable()) // REST API ì‚¬ìš© ì‹œì—ëŠ” CSRF ë¹„í™œì„±í™”
+            .authorizeHttpRequests(auth -> auth
+                .requestMatchers("/login", "/register").permitAll() // ë¡œê·¸ì¸, íšŒì›ê°€ì…ì€ ëª¨ë‘ í—ˆìš©
+                .anyRequest().authenticated() // ë‚˜ë¨¸ì§€ ìš”ì²­ì€ ì¸ì¦ í•„ìš”
             )
-            .formLogin(form -> form.disable()) // ±âº» Æû ·Î±×ÀÎ »ç¿ë ¾ÈÇÔ
-            .httpBasic(httpBasic -> httpBasic.disable()); // HTTP ±âº» ÀÎÁõ ºñÈ°¼ºÈ­
+            .formLogin(form -> form.disable()) // ê¸°ë³¸ í¼ ë¡œê·¸ì¸ ì‚¬ìš© ì•ˆí•¨
+            .httpBasic(httpBasic -> httpBasic.disable()); // HTTP ê¸°ë³¸ ì¸ì¦ ë¹„í™œì„±í™”
 
         return http.build();
     }
@@ -32,15 +32,5 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder();
     }
 
-    @Bean
-    public void configureGlobal(AuthenticationManagerBuilder auth) throws Exception {
-        auth.inMemoryAuthentication()
-            .withUser("user")
-            .password(passwordEncoder().encode("password"))
-            .roles("USER")
-            .and()
-            .withUser("admin")
-            .password(passwordEncoder().encode("admin"))
-            .roles("ADMIN");
-    }
+    // ë¶ˆí•„ìš”í•œ AuthenticationManager ì„¤ì • ì œê±°
 }

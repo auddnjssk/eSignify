@@ -1,14 +1,14 @@
 package com.eSignify.controller;
 
+import java.io.IOException;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -16,11 +16,15 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import com.eSignify.common.CommonUtil;
 import com.eSignify.common.kakao.service.KakaoSendService;
 import com.eSignify.service.LoginService;
 
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
+import okhttp3.Response;
 
 
 @Controller
@@ -32,21 +36,39 @@ public class LoginController {
 	@Autowired 
 	private KakaoSendService kakaoSendService; 
 	
-	@Autowired
-    private AuthenticationManager authenticationManager;
+	@Autowired 
+	private CommonUtil comUtil; 
 	
+    private static final long EXPIRATION_TIME = 864_000_00; // 1Ïùº (Î∞ÄÎ¶¨Ï¥à)
 
-	@PostMapping("/login")
-    public ResponseEntity<String> login(@RequestBody Map<String, String> credentials) {
-		
-        String username = credentials.get("userId");
-        String password = credentials.get("passWord");
-
+    @PostMapping("/login")
+    public ResponseEntity<String> login(@RequestBody Map<String, String> requestBody) throws IOException {
+        String userId = requestBody.get("userId");
+        String userPassword = requestBody.get("passWord");
+        String condition = "USER_ID=eq."+userId + "&USER_PASSWORD=eq." + userPassword;
+        String tableName = "T_USER";
+        
+        
+        
         try {
-            Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(username, password)
-            );
-            return ResponseEntity.ok("Login successful");
+        	// DB Ï°∞Ìöå
+        	Response selectResponse= comUtil.supaBaseSelect(userId, tableName,condition);
+        	
+        	String SECRET_KEY = comUtil.generateSecretKey();
+
+                long currentTimeMillis = System.currentTimeMillis();
+                Date now = new Date(currentTimeMillis);
+                Date expiryDate = new Date(currentTimeMillis + EXPIRATION_TIME);
+
+                String jwtToken = Jwts.builder()
+                        .setSubject(userId)
+                        .setIssuedAt(now)
+                        .setExpiration(expiryDate)
+                        .signWith(SignatureAlgorithm.HS256, SECRET_KEY) // ÏÑúÎ™Ö ÏïåÍ≥†Î¶¨Ï¶òÍ≥º ÎπÑÎ∞Ä ÌÇ§Î•º ÏÇ¨Ïö©Ìï¥ ÏÑúÎ™Ö
+                        .compact();
+
+                
+            return ResponseEntity.ok(jwtToken);
         } catch (AuthenticationException e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid credentials");
         }
@@ -64,7 +86,7 @@ public class LoginController {
         return "123";
     }
     
-    // ƒ£±∏ø°∞‘ ∏ﬁΩ√¡ˆ ¿¸º€ API
+    // ƒ£ÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩ ÔøΩﬁΩÔøΩÔøΩÔøΩ ÔøΩÔøΩÔøΩÔøΩ API
     @GetMapping("/sendMessage")
     public String sendMessage(@RequestParam String accessToken, @RequestParam String friendId, @RequestParam String messageText) {
         return kakaoSendService.sendMessage(accessToken, friendId, messageText);
