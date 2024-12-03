@@ -37,6 +37,11 @@ dependencies {
     // javax.servlet API 추가
     implementation 'javax.servlet:javax.servlet-api:4.0.1'
     
+    
+	// 스프링 부트 시큐리티 의존성
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+    
+    
     implementation 'org.postgresql:postgresql:42.6.0'
     
 	//implementation 'org.springframework.boot:spring-boot-starter-security' // �뒪�봽留� �떆�걧由ы떚
@@ -69,12 +74,6 @@ dependencies {
 	
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
 	
-	//�뒪�봽留� �떆�걧由ы떚瑜� �쐞�븳 異붽�
-    //implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
-    //implementation 'io.jsonwebtoken:jjwt-impl:0.11.5'
-    //implementation 'io.jsonwebtoken:jjwt-jackson:0.11.5'
-	//implementation 'org.springframework.boot:spring-boot-starter-security'
-	//implementation 'org.springframework.boot:spring-boot-starter-oauth2-authorization-server'
 	
 
 

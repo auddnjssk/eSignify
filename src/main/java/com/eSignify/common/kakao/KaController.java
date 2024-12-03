@@ -2,24 +2,26 @@ package com.eSignify.common.kakao;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.eSignify.common.kakao.service.KakaoAuthService;
 import com.eSignify.common.kakao.service.KakaoSendService;
 
+import jakarta.servlet.http.HttpServletRequest;
 import okhttp3.*;
 import org.springframework.http.HttpStatus;
 
-import javax.servlet.http.Cookie;
-import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 
 
 @RestController
-public class KaAuthController {
+@RequestMapping("/ka")
+public class KaController {
 
     @Autowired
     private KakaoAuthService kakaoAuthService;
@@ -30,7 +32,7 @@ public class KaAuthController {
     
     // 확인하고 계속하기
     // https://kauth.kakao.com/oauth/authorize?client_id=afd0afadcf81f1efaf97fe02625c2963&redirect_uri=http://localhost:8080/oauth/kakao&response_type=code
-    @GetMapping("/oauth/kakao")
+    @PostMapping("/oauth/kakao")
     public AccessTokenResponse kakaoCallback(@RequestParam String code) throws Exception {
     	
         // authorization_code를 사용해 accessToken을 발급받습니다.
@@ -45,20 +47,25 @@ public class KaAuthController {
     
     
     @PostMapping("/send-message")
+    // 쿠키를 받아오기위함
+    @CrossOrigin(origins = "http://localhost:8080", allowCredentials = "true")
     public ResponseEntity<String> sendMessage(HttpServletRequest request) {
-        // 쿠키에서 카카오 Access Token 가져오기
         String accessToken = null;
-        Cookie[] cookies = request.getCookies();
+        
+        // 쿠키에서 카카오 Access Token 가져오기
+        jakarta.servlet.http.Cookie[] cookies = request.getCookies(); // jakarta.servlet.http.Cookie 사용
         if (cookies != null) {
-            for (Cookie cookie : cookies) {
+            for (jakarta.servlet.http.Cookie cookie : cookies) {
                 if ("kakaoAccessToken".equals(cookie.getName())) {
                     accessToken = cookie.getValue();
+                    break; // 토큰을 찾았으므로 반복문 탈출
                 }
             }
         }
 
+        // Access Token이 없을 경우 처리
         if (accessToken == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("인증되지 않은 사용자입니다.");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Access token not found");
         }
 
         // 카카오 메시지 API 호출

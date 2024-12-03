@@ -4,6 +4,12 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -25,13 +31,26 @@ public class LoginController {
 	
 	@Autowired 
 	private KakaoSendService kakaoSendService; 
+	
+	@Autowired
+    private AuthenticationManager authenticationManager;
+	
 
-	@GetMapping("/loginChk")
-	public String loginChk() {
+	@PostMapping("/login")
+    public ResponseEntity<String> login(@RequestBody Map<String, String> credentials) {
 		
+        String username = credentials.get("userId");
+        String password = credentials.get("passWord");
 
-		return "index";
-	}
+        try {
+            Authentication authentication = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(username, password)
+            );
+            return ResponseEntity.ok("Login successful");
+        } catch (AuthenticationException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid credentials");
+        }
+    }
     
  	@PostMapping("/loginChk")
  	public void loginChk(HttpServletRequest request,
