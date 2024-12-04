@@ -1,3 +1,6 @@
 eclipse.preferences.version=1
+encoding//src/main/java/com/SecurityConfig.java=UTF-8
+encoding//src/main/java/com/eSignify/common/CommonUtil.java=UTF-8
+encoding//src/main/java/com/eSignify/controller/LoginController.java=UTF-8
 encoding//src/main/resources/application.properties=UTF-8
 encoding/build.gradle=UTF-8

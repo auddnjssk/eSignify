@@ -39,19 +39,21 @@ public class LoginController {
 	@Autowired 
 	private CommonUtil comUtil; 
 	
-    private static final long EXPIRATION_TIME = 864_000_00; // 1일 (밀리초)
+    private static final long EXPIRATION_TIME = 864_000_00; // 1�씪 (諛�由ъ큹)
 
     @PostMapping("/login")
-    public ResponseEntity<String> login(@RequestBody Map<String, String> requestBody) throws IOException {
+    public ResponseEntity<String> login(@RequestBody Map<String, String> requestBody,HttpServletRequest request) throws IOException {
+    	
         String userId = requestBody.get("userId");
         String userPassword = requestBody.get("passWord");
         String condition = "USER_ID=eq."+userId + "&USER_PASSWORD=eq." + userPassword;
         String tableName = "T_USER";
         
-        
+
+
         
         try {
-        	// DB 조회
+        	// DB
         	Response selectResponse= comUtil.supaBaseSelect(userId, tableName,condition);
         	
         	String SECRET_KEY = comUtil.generateSecretKey();
@@ -64,8 +66,12 @@ public class LoginController {
                         .setSubject(userId)
                         .setIssuedAt(now)
                         .setExpiration(expiryDate)
-                        .signWith(SignatureAlgorithm.HS256, SECRET_KEY) // 서명 알고리즘과 비밀 키를 사용해 서명
+                        .signWith(SignatureAlgorithm.HS256, SECRET_KEY) // �꽌紐� �븣怨좊━利섍낵 鍮꾨� �궎瑜� �궗�슜�빐 �꽌紐�
                         .compact();
+                
+                // Session에 UserId 저장
+                HttpSession session = request.getSession();
+                session.setAttribute("userId", userId);
 
                 
             return ResponseEntity.ok(jwtToken);
@@ -85,11 +91,6 @@ public class LoginController {
     	//kakaoSendService.getFriends(accessToken);
         return "123";
     }
-    
-    // ģ������ �޽��� ���� API
-    @GetMapping("/sendMessage")
-    public String sendMessage(@RequestParam String accessToken, @RequestParam String friendId, @RequestParam String messageText) {
-        return kakaoSendService.sendMessage(accessToken, friendId, messageText);
-    }
+
  	
 }

@@ -5,10 +5,14 @@ import java.util.Base64;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 
+import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
+import okhttp3.RequestBody;
 import okhttp3.Response;
 
 
@@ -21,6 +25,8 @@ public class CommonUtil {
 	@Value("${SUPABASE_KEY}")
 	private String SUPABASE_KEY;
 	
+	private final OkHttpClient client = new OkHttpClient();
+
 	// 랜덤으로 비밀 키 생성 (32 바이트, 256비트)
     public String generateSecretKey() {
         byte[] key = new byte[32];
@@ -78,4 +84,33 @@ public class CommonUtil {
             return null;
         }
     }
+
+
+    public ResponseEntity<String> supaBaseUpdate(String tableName,String condition,String body) {
+    	
+
+    	String url = SUPABASE_URL +"/rest/v1/" + tableName + "?"+condition;
+
+  
+        RequestBody jsonBody = RequestBody.create(body, MediaType.get("application/json; charset=utf-8"));
+        
+        Request request = new Request.Builder()
+                .url(url)
+                .patch(jsonBody)
+                .addHeader("apikey", SUPABASE_KEY)
+                .addHeader("Authorization", "Bearer " + SUPABASE_KEY)
+                .addHeader("Content-Type", "application/json")
+                .build();
+
+        try (Response response = client.newCall(request).execute()) {
+            if (response.isSuccessful()) {
+                return ResponseEntity.ok("Supabase 업데이트 성공");
+            } else {
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Supabase 업데이트 실패: " + response.message());
+            }
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Supabase 요청 중 오류 발생: " + e.getMessage());
+        }
+    }
+
 }

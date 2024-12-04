@@ -36,6 +36,8 @@ dependencies {
     
     // javax.servlet API 추가
     implementation 'javax.servlet:javax.servlet-api:4.0.1'
+	// JSON 처리 라이브러리 (Jackson)
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.13.0'
     
     
 	// 스프링 부트 시큐리티 의존성
