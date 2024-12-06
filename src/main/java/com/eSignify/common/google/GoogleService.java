@@ -7,7 +7,7 @@ import org.springframework.web.client.RestTemplate;
 import org.json.JSONObject;
 
 @Service
-public class GoogleAuthService {
+public class GoogleService {
     
     private final RestTemplate restTemplate = new RestTemplate();
 
@@ -38,7 +38,7 @@ public class GoogleAuthService {
         ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.POST, entity, String.class);
         
         if (response.getStatusCode() == HttpStatus.OK) {
-            // authorizationCode 발급완료 
+            // authorizationCode 발급?���? 
             JSONObject json = new JSONObject(response.getBody());
             return ResponseEntity.ok("Login successful");
 
