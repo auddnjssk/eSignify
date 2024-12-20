@@ -6,7 +6,9 @@ import org.springframework.http.ResponseEntity;
 import com.eSignify.common.CommonUtil;
 import com.eSignify.common.kakao.service.KakaoAuthService;
 import com.eSignify.common.kakao.service.KakaoSendService;
+import com.eSignify.model.AccessTokenResponse;
 import com.eSignify.model.KakaoUserDTO;
+import com.eSignify.model.LoginResponse;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
@@ -16,10 +18,11 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.bind.annotation.RequestBody;
 
 import java.io.IOException;
+import java.util.List;
 
 
 @RestController
-@CrossOrigin(origins = "http://localhost:8080") // ÇÁ·ÐÆ®¿£µå ÁÖ¼Ò ¸í½Ã
+@CrossOrigin(origins = "http://localhost:8080") // ï¿½ï¿½ï¿½ï¿½Æ®ï¿½ï¿½ï¿½ï¿½ ï¿½Ö¼ï¿½ ï¿½ï¿½ï¿½
 public class KakaoController {
 
     @Autowired
@@ -32,29 +35,18 @@ public class KakaoController {
 	private CommonUtil comUtil; 
 
     
-	// ¸®´ÙÀÌ·ºÆ® URL
     @PostMapping("/oauth/kakao")
     public AccessTokenResponse kakaoCallback(@RequestParam String code) throws Exception {
     	
     	AccessTokenResponse	accessToken = kakaoAuthService.getAccessToken(code);
     	
-        //kakaoSendService.getFriends(tkResponse);
-    	// ÄíÅ°¿¡ Access Token ÀúÀå
-//        jakarta.servlet.http.Cookie kakaoCookie = new jakarta.servlet.http.Cookie("kakaoAccessToken", accessToken);
-//        kakaoCookie.setHttpOnly(true); // Å¬¶óÀÌ¾ðÆ®¿¡¼­ Á¢±Ù ºÒ°¡´ÉÇÏ°Ô ¼³Á¤ÇÏ¿© º¸¾È¼º °­È­
-//        kakaoCookie.setSecure(true); // HTTPS·Î¸¸ Àü¼ÛµÇµµ·Ï ¼³Á¤
-//        kakaoCookie.setPath("/"); // ¸ðµç °æ·Î¿¡¼­ ÄíÅ° Á¢±Ù °¡´É
-//        kakaoCookie.setMaxAge(60 * 60); // ¸¸·á ½Ã°£ ¼³Á¤ (¿¹: 1½Ã°£ µ¿¾È À¯È¿)
-//        
-        
         return accessToken;
     }
     
-    // È®ÀÎÇÏ°í °è¼ÓÇÏ±â
     @PostMapping("/kakao/connect")
     public ResponseEntity<String> kakaoConnect(@RequestBody KakaoUserDTO kakaoUserDTO,HttpServletRequest request) throws Exception {
     	try {
-            // »ç¿ëÀÚ Á¤º¸°¡ DB¿¡ Á¸ÀçÇÏ´ÂÁö È®ÀÎ
+            // ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ DBï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ï´ï¿½ï¿½ï¿½ È®ï¿½ï¿½
     		
             String condition = "KAKAO_EMAIL=eq."+kakaoUserDTO.getEmail();
             
@@ -62,22 +54,12 @@ public class KakaoController {
             HttpSession session = request.getSession();
             String userId = (String) session.getAttribute("userId");
             
-    		Response selectResponse= comUtil.supaBaseSelect("", tableName,condition);
+            List<LoginResponse> selectResponse= comUtil.supaBaseSelect("", tableName,condition);
             
     		
-            if (selectResponse.request().body() != null) {
-//                // ±âÁ¸ »ç¿ëÀÚ °èÁ¤°ú Ä«Ä«¿À °èÁ¤ ¿¬°á
-//                existingUser.setKakaoId(kakaoUserDTO.getKakaoId());
-//                userService.save(existingUser);
-                return ResponseEntity.ok("Ä«Ä«¿À °èÁ¤ÀÌ ¼º°øÀûÀ¸·Î ¿¬µ¿µÇ¾ú½À´Ï´Ù.");
+            if (selectResponse != null) {
+                return ResponseEntity.ok("Ä«Ä«ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ç¾ï¿½ï¿½ï¿½ï¿½Ï´ï¿½.");
             } else {
-                // »ç¿ëÀÚ°¡ ¾ø´Ù¸é »õ·Î¿î °èÁ¤ »ý¼º
-//                User newUser = new User();
-//                newUser.setEmail(kakaoUserDTO.getEmail());
-//                newUser.setNickname(kakaoUserDTO.getNickname());
-//                newUser.setKakaoId(kakaoUserDTO.getKakaoId());
-//                userService.save(newUser);
-            	
             	condition = "USER_ID=eq."+userId;
             			
             	String body = "{\"KAKAO_ID\": \"" + kakaoUserDTO.getKakaoId() + "\", \"KAKAO_EMAIL\": \"" + kakaoUserDTO.getEmail() + "\"}";
@@ -86,32 +68,32 @@ public class KakaoController {
             	
             	System.out.println(response.getStatusCode());
             	
-                return ResponseEntity.ok("»õ·Î¿î °èÁ¤ÀÌ »ý¼ºµÇ°í Ä«Ä«¿À °èÁ¤ÀÌ ¿¬µ¿µÇ¾ú½À´Ï´Ù.");
+                return ResponseEntity.ok("ï¿½ï¿½ï¿½Î¿ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ç°ï¿½ Ä«Ä«ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ç¾ï¿½ï¿½ï¿½ï¿½Ï´ï¿½.");
             }
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("°èÁ¤ ¿¬µ¿ Áß ¿À·ù°¡ ¹ß»ýÇß½À´Ï´Ù.");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ß»ï¿½ï¿½ß½ï¿½ï¿½Ï´ï¿½.");
         }
     }
     
     
     @PostMapping("/send-message")
-    // ÄíÅ°¸¦ ¹Þ¾Æ¿À±âÀ§ÇÔ
+    // ï¿½ï¿½Å°ï¿½ï¿½ ï¿½Þ¾Æ¿ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     @CrossOrigin(origins = "http://localhost:8080", allowCredentials = "true")
     public ResponseEntity<String> sendMessage(HttpServletRequest request) {
         String accessToken = null;
         
-        // ÄíÅ°¿¡¼­ Ä«Ä«¿À Access Token °¡Á®¿À±â
-        jakarta.servlet.http.Cookie[] cookies = request.getCookies(); // jakarta.servlet.http.Cookie »ç¿ë
+        // ï¿½ï¿½Å°ï¿½ï¿½ï¿½ï¿½ Ä«Ä«ï¿½ï¿½ Access Token ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+        jakarta.servlet.http.Cookie[] cookies = request.getCookies(); // jakarta.servlet.http.Cookie ï¿½ï¿½ï¿½
         if (cookies != null) {
             for (jakarta.servlet.http.Cookie cookie : cookies) {
                 if ("kakaoAccessToken".equals(cookie.getName())) {
                     accessToken = cookie.getValue();
-                    break; // ÅäÅ«À» Ã£¾ÒÀ¸¹Ç·Î ¹Ýº¹¹® Å»Ãâ
+                    break; // ï¿½ï¿½Å«ï¿½ï¿½ Ã£ï¿½ï¿½ï¿½ï¿½ï¿½Ç·ï¿½ ï¿½Ýºï¿½ï¿½ï¿½ Å»ï¿½ï¿½
                 }
             }
         }
 
-        // Access TokenÀÌ ¾øÀ» °æ¿ì Ã³¸®
+        // Access Tokenï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ Ã³ï¿½ï¿½
         if (accessToken == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Access token not found");
         }
@@ -123,5 +105,3 @@ public class KakaoController {
         
     }
 }
-//http://localhost:8080/oauth/google
-//https://accounts.google.com/o/oauth2/v2/auth?client_id=298618192214-r7d4c3p7jaavis7nghdrbug1bs0shkoh.apps.googleusercontent.com&redirect_uri=http://localhost:8080/oauth/google&response_type=code&scope=email%20profile&state=YOUR_UNIQUE_STATE

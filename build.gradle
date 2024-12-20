@@ -45,6 +45,15 @@ dependencies {
     implementation 'io.jsonwebtoken:jjwt:0.9.1'
     implementation 'org.springframework.boot:spring-boot-starter-web'
     
+    // PDF 사용을 위함
+    implementation 'org.apache.pdfbox:pdfbox:2.0.29' 
+    
+    // 클라이언트에서 받아온 HTML을 PDF화 시키기위해 사용 (OpenHTMLToPDF 라이브러리)
+    implementation 'com.openhtmltopdf:openhtmltopdf-pdfbox:1.0.10'
+    implementation 'com.openhtmltopdf:openhtmltopdf-slf4j:1.0.10'
+    
+    // MIME 사용을위해
+    implementation 'com.sun.mail:jakarta.mail:2.0.1'
     
     implementation 'org.postgresql:postgresql:42.6.0'
 

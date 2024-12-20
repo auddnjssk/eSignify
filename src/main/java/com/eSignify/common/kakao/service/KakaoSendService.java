@@ -12,7 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
-import com.eSignify.common.kakao.AccessTokenResponse;
+import com.eSignify.model.AccessTokenResponse;
 
 import okhttp3.*;
 import okhttp3.MediaType;
@@ -22,7 +22,7 @@ public class KakaoSendService {
 
     private final RestTemplate restTemplate = new RestTemplate();
 
-    // Ä£±¸¿¡°Ô ¸Þ½ÃÁö º¸³»±â
+    // Ä£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Þ½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 //    public String sendMessage(String accessToken, String friendId, String messageText) {
 //        String url = "https://kapi.kakao.com/v1/api/talk/friends/message/default/send";
 //
@@ -45,17 +45,17 @@ public class KakaoSendService {
 //        return response.getBody();
 //    }
     
-    // ³ª¿¡°Ô ¸Þ½ÃÁö º¸³»±â
+    // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Þ½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     public void sendMessage2Me(String accessToken) {
         OkHttpClient client = new OkHttpClient();
 
         String url = "https://kapi.kakao.com/v2/api/talk/memo/default/send";
 
-        // ¸Þ½ÃÁö ³»¿ë ¼³Á¤ (JSON ÇüÅÂ)
+        // ï¿½Þ½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ (JSON ï¿½ï¿½ï¿½ï¿½)
         String json = "{"
                 + "\"template_object\": {"
                 + "  \"object_type\": \"text\","
-                + "  \"text\": \"¾È³çÇÏ¼¼¿ä, Ä«Ä«¿À ¸Þ½ÃÁö API ¿¹Á¦ÀÔ´Ï´Ù.\","
+                + "  \"text\": \"ï¿½È³ï¿½ï¿½Ï¼ï¿½ï¿½ï¿½, Ä«Ä«ï¿½ï¿½ ï¿½Þ½ï¿½ï¿½ï¿½ API ï¿½ï¿½ï¿½ï¿½ï¿½Ô´Ï´ï¿½.\","
                 + "  \"link\": {"
                 + "    \"web_url\": \"https://yourwebsite.com\","
                 + "    \"mobile_web_url\": \"https://yourwebsite.com\""
@@ -63,9 +63,9 @@ public class KakaoSendService {
                 + "}"
                 + "}";
 
-        // ¿äÃ» º»¹® ÀÛ¼º (application/json; charset=utf-8 -> application/json)
+        // ï¿½ï¿½Ã» ï¿½ï¿½ï¿½ï¿½ ï¿½Û¼ï¿½ (application/json; charset=utf-8 -> application/json)
         //RequestBody jsonPars = RequestBody.create(json, MediaType.parse("application/json"));
-        // JSON ¹®ÀÚ¿­À» URL ÀÎÄÚµù
+        // JSON ï¿½ï¿½ï¿½Ú¿ï¿½ï¿½ï¿½ URL ï¿½ï¿½ï¿½Úµï¿½
         String encodedJson;
         try {
             encodedJson = URLEncoder.encode(json, StandardCharsets.UTF_8.toString());
@@ -74,24 +74,24 @@ public class KakaoSendService {
             return;
         }
 
-        // URL ÀÎÄÚµùµÈ ¿äÃ» º»¹® ÀÛ¼º
+        // URL ï¿½ï¿½ï¿½Úµï¿½ï¿½ï¿½ ï¿½ï¿½Ã» ï¿½ï¿½ï¿½ï¿½ ï¿½Û¼ï¿½
         RequestBody body = new FormBody.Builder()
-                .add("template_object", encodedJson)  // URL ÀÎÄÚµùµÈ JSON ¹®ÀÚ¿­ Ãß°¡
+                .add("template_object", encodedJson)  // URL ï¿½ï¿½ï¿½Úµï¿½ï¿½ï¿½ JSON ï¿½ï¿½ï¿½Ú¿ï¿½ ï¿½ß°ï¿½
                 .build();
-        // HTTP ¿äÃ» »ý¼º
+        // HTTP ï¿½ï¿½Ã» ï¿½ï¿½ï¿½ï¿½
         Request request = new Request.Builder()
                 .url(url)
                 .post(body)
-                .addHeader("Authorization", "Bearer " + accessToken)  // ¾×¼¼½º ÅäÅ« Ãß°¡
-                .addHeader("Content-Type", "application/x-www-form-urlencoded")  // Content-Type Çì´õ º¯°æ
+                .addHeader("Authorization", "Bearer " + accessToken)  // ï¿½×¼ï¿½ï¿½ï¿½ ï¿½ï¿½Å« ï¿½ß°ï¿½
+                .addHeader("Content-Type", "application/x-www-form-urlencoded")  // Content-Type ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
                 .build();
 
         try (Response response = client.newCall(request).execute()) {
             if (response.isSuccessful()) {
-                System.out.println("¸Þ½ÃÁö Àü¼Û ¼º°ø: " + response.body().string());
+                System.out.println("ï¿½Þ½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½: " + response.body().string());
             } else {
-                System.out.println("¸Þ½ÃÁö Àü¼Û ½ÇÆÐ: " + response.code() + " - " + response.message());
-                System.out.println("¿¡·¯ ÀÀ´ä º»¹®: " + response.body().string());
+                System.out.println("ï¿½Þ½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½: " + response.code() + " - " + response.message());
+                System.out.println("ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½: " + response.body().string());
             }
         } catch (Exception e) {
             e.printStackTrace();

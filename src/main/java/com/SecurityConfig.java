@@ -18,7 +18,8 @@ public class SecurityConfig {
         http
             .csrf(csrf -> csrf.disable()) // REST API 사용 시에는 CSRF 비활성화
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/login", "/register").permitAll() // 로그인, 회원가입은 모두 허용
+                //.requestMatchers("/login", "/register").permitAll() // 로그인, 회원가입은 모두 허용
+                .requestMatchers("/*").permitAll() // 로그인, 회원가입은 모두 허용
                 .anyRequest().permitAll() // 나머지 요청도 인증 없이 허용
                 //.anyRequest().authenticated() // 나머지 요청은 인증 필요
             )

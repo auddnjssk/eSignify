@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.AuthenticationException;
@@ -17,14 +16,15 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import com.eSignify.common.CommonUtil;
+import com.eSignify.common.ObjectUtil;
 import com.eSignify.common.kakao.service.KakaoSendService;
+import com.eSignify.model.LoginResponse;
 import com.eSignify.service.LoginService;
 
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
-import okhttp3.Response;
 
 
 @Controller
@@ -49,32 +49,49 @@ public class LoginController {
         String condition = "USER_ID=eq."+userId + "&USER_PASSWORD=eq." + userPassword;
         String tableName = "T_USER";
         
-
-
+        String jwtToken ;
         
         try {
         	// DB
-        	Response selectResponse= comUtil.supaBaseSelect(userId, tableName,condition);
+        	List<LoginResponse> selectResponse= comUtil.supaBaseSelect(userId, tableName,condition);
         	
-        	String SECRET_KEY = comUtil.generateSecretKey();
+        	// 회원가입 안되어있으면 return
+            if(selectResponse.size() <= 0) {
 
+            	jwtToken = null;
+
+            }else {
+            	
+                String SECRET_KEY = comUtil.generateSecretKey();
+            	
                 long currentTimeMillis = System.currentTimeMillis();
                 Date now = new Date(currentTimeMillis);
                 Date expiryDate = new Date(currentTimeMillis + EXPIRATION_TIME);
 
-                String jwtToken = Jwts.builder()
+                jwtToken = Jwts.builder()
                         .setSubject(userId)
                         .setIssuedAt(now)
                         .setExpiration(expiryDate)
-                        .signWith(SignatureAlgorithm.HS256, SECRET_KEY) // �꽌紐� �븣怨좊━利섍낵 鍮꾨� �궎瑜� �궗�슜�빐 �꽌紐�
+                        .signWith(SignatureAlgorithm.HS256, SECRET_KEY) 
                         .compact();
+                
+                //카카오 ID가 있다면 ACCESS토큰을 가져와서 쿠키에 뿌림
+                if(ObjectUtil.isNotEmpty(selectResponse.get(0).getKakaoId())) {
+                	
+                }
+                //구글 ID가 있다면 ACCESS토큰을 가져와서 쿠키에 뿌림
+                if(ObjectUtil.isNotEmpty(selectResponse.get(0).getGoogleId())) {
+                	
+                }
                 
                 // Session에 UserId 저장
                 HttpSession session = request.getSession();
                 session.setAttribute("userId", userId);
-
-                
+            	
+            }
+            
             return ResponseEntity.ok(jwtToken);
+            
         } catch (AuthenticationException e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid credentials");
         }

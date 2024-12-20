@@ -9,7 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
-import com.eSignify.common.kakao.AccessTokenResponse;
+import com.eSignify.model.AccessTokenResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.springframework.util.LinkedMultiValueMap;
@@ -37,14 +37,14 @@ public class KakaoAuthService {
 
         MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
         params.add("grant_type", "authorization_code");
-        params.add("client_id", clientId); // Ä«Ä«¿À µðº§·ÎÆÛ½º¿¡¼­ ¹ß±Þ¹ÞÀº Client ID
-        params.add("redirect_uri", redirectUri); // ¸®´ÙÀÌ·ºÆ® URI
+        params.add("client_id", clientId); // Ä«Ä«ï¿½ï¿½ ï¿½ðº§·ï¿½ï¿½Û½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ß±Þ¹ï¿½ï¿½ï¿½ Client ID
+        params.add("redirect_uri", redirectUri); // ï¿½ï¿½ï¿½ï¿½ï¿½Ì·ï¿½Æ® URI
         params.add("code", authorizationCode); // authorization code
 
         HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(params, headers);
         ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.POST, request, String.class);
 
-        // JSON ÀÀ´äÀ» KakaoAccessTokenResponse °´Ã¼·Î º¯È¯
+        // JSON ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ KakaoAccessTokenResponse ï¿½ï¿½Ã¼ï¿½ï¿½ ï¿½ï¿½È¯
         return objectMapper.readValue(response.getBody(), AccessTokenResponse.class);
     }
     
@@ -56,8 +56,8 @@ public class KakaoAuthService {
 
         MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
         params.add("grant_type", "refresh_token");
-        params.add("client_id", clientId); // Ä«Ä«¿À µðº§·ÎÆÛ½º¿¡¼­ ¹ß±Þ¹ÞÀº Client ID
-        params.add("refresh_token", refreshToken); // ÀÌÀü¿¡ ¹ß±Þ¹ÞÀº Refresh Token
+        params.add("client_id", clientId); // Ä«Ä«ï¿½ï¿½ ï¿½ðº§·ï¿½ï¿½Û½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ß±Þ¹ï¿½ï¿½ï¿½ Client ID
+        params.add("refresh_token", refreshToken); // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ß±Þ¹ï¿½ï¿½ï¿½ Refresh Token
 
         HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(params, headers);
         ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.POST, request, String.class);
