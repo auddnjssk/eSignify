@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.security.SecureRandom;
 import java.util.Base64;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -14,6 +15,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 
+import com.eSignify.common.google.entity.SendMailEntity;
 import com.eSignify.model.LoginResponse;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -140,16 +142,16 @@ public class CommonUtil {
     }
     
     // OpenHTMLToPDF로 PDF 변환 메소드
-    public String createPDF(Map<String, String> requestBody,HttpServletRequest request) {
-    	
-    	String CUST_CD = requestBody.get("CUST_CD");
-    	String CUST_NM = requestBody.get("CUST_NM");
-    	String CUST_GOOID = requestBody.get("CUST_GOOID");
+    public String createPDF(HashMap<String, Object> custMap,HashMap<String, Object> pdfMap,HashMap<String, Object> mailMap) {
+
+    	String custCd 	  = (String) custMap.get("cust_cd");
+    	String custNm 	  = (String) custMap.get("cust_nm");
+    	String custGooId = (String) custMap.get("cust_gooid");
     	
     	// 텍스트 콘텐츠
-    	String stContent = requestBody.get("FORM_DETAIL");
+    	String pdfFormDetail = (String) pdfMap.get("form_detail");
 	 
-    	stContent = stContent.replaceAll("&nbsp;", "&#160;");
+    	pdfFormDetail = pdfFormDetail.replaceAll("&nbsp;", "&#160;");
     			 
 	 	// Html Making Start
     	StringBuilder content = new StringBuilder("<html>");
@@ -158,12 +160,10 @@ public class CommonUtil {
         .append("</style></head>")
 		.append("<body>")
 		.append("<p>제목</p>")
-		.append(stContent)
+		.append(pdfFormDetail)
 		.append("</body></html>");
 		 
-		String filePath = "C:\\Users\\User\\Desktop\\fileTest\\"+CUST_CD +CUST_NM+".pdf";
-		
-		requestBody.put("filePath", filePath);
+		String filePath = "C:\\Users\\User\\Desktop\\fileTest\\"+custCd +custNm+".pdf";
 		
 		try (FileOutputStream os = new FileOutputStream(filePath)) {
 			PdfRendererBuilder builder = new PdfRendererBuilder();

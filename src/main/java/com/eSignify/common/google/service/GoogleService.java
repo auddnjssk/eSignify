@@ -9,6 +9,7 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.Base64;
+import java.util.HashMap;
 import java.util.Map;
 
 import org.json.JSONObject;
@@ -104,26 +105,27 @@ public class GoogleService {
 
     
     /**
-     * @param String accessToken , to , subject , bodyText
+     * @param String accessToken,String pdfUrl, HashMap<String, Object> custMap
+    		,HashMap<String, Object> pdfMap ,HashMap<String, Object> mailMap
      * @return ResponseEntity
      */
-    public String sendEmail(Map<String, String> requestBody,String accessToken, String to, String subject, String bodyText) {
+    public String sendEmail(String accessToken,String filePath, HashMap<String, Object> custMap
+    		,HashMap<String, Object> pdfMap ,HashMap<String, Object> mailMap) {
     	
         String url = "https://www.googleapis.com/gmail/v1/users/me/messages/send";
         
-    	String CUST_CD = requestBody.get("CUST_CD");
-    	String CUST_NM = requestBody.get("CUST_NM");
-    	String CUST_GOOID = requestBody.get("CUST_GOOID");
-    	String filePath = requestBody.get("filePath");
+        String custCd 	  = (String) custMap.get("cust_cd");
+    	String custNm 	  = (String) custMap.get("cust_nm");
+    	//String custGooId  = (String) custMap.get("cust_gooid");
+    	String custGooId  = "nxnx23@naver.com";//(String) custMap.get("cust_gooid");
     	
-        to = "nxnx23@naver.com";
+    	String cust_kaid  = "nxnx23@naver.com";//(String) custMap.get("cust_kaid");
+        String subject 	  = (String) mailMap.get("form_title");
+        String bodyText   = (String) mailMap.get("form_detail");
+        //"안녕하세요 해당 URL에 접속하셔서 사인 부탁드립니다." + filePath;
         
-        subject = "서브젝트";
-        
-        
-        bodyText = "안녕하세요 해당 URL에 접속하셔서 사인 부탁드립니다." + filePath;
-        
-        String rawMessage = createRawEmail(to, subject, bodyText);
+        // to / subject / bodyText
+        String rawMessage = createRawEmail(cust_kaid, subject, bodyText);
         
         //ResponseEntity<String> ResponseEntity =  getAccessToken(accessToken);
         
