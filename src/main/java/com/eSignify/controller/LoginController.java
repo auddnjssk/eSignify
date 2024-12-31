@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import com.eSignify.common.CommonUtil;
 import com.eSignify.common.ObjectUtil;
-import com.eSignify.common.kakao.service.KakaoSendService;
+import com.eSignify.kakao.service.KakaoSendService;
 import com.eSignify.model.LoginResponse;
 import com.eSignify.service.LoginService;
 

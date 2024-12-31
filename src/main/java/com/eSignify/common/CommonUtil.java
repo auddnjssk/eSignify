@@ -2,32 +2,24 @@ package com.eSignify.common;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.security.SecureRandom;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Properties;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 
-import com.eSignify.common.google.entity.SendMailEntity;
+import com.eSignify.google.service.GoogleDriveUploader;
 import com.eSignify.model.LoginResponse;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.gson.JsonObject;
 import com.openhtmltopdf.pdfboxout.PdfRendererBuilder;
 
-import jakarta.mail.Authenticator;
-import jakarta.mail.Message;
-import jakarta.mail.MessagingException;
-import jakarta.mail.internet.InternetAddress;
-import jakarta.mail.internet.MimeMessage;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.websocket.Session;
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -42,6 +34,9 @@ public class CommonUtil {
 	
 	@Value("${SUPABASE_KEY}")
 	private String SUPABASE_KEY;
+	
+	@Autowired
+	GoogleDriveUploader googleDriveUploader;
 	
 	private final OkHttpClient client = new OkHttpClient();
 
@@ -112,7 +107,6 @@ public class CommonUtil {
         }
     }
 
-
     // SupaBase Update 메소드
     public ResponseEntity<String> supaBaseUpdate(String tableName,String condition,String body) {
     	
@@ -141,8 +135,36 @@ public class CommonUtil {
         }
     }
     
-    // OpenHTMLToPDF로 PDF 변환 메소드
-    public String createPDF(HashMap<String, Object> custMap,HashMap<String, Object> pdfMap,HashMap<String, Object> mailMap) {
+    // SupaBase insert 메소드
+    public ResponseEntity<String> supaBaseInsert (String tableName,JsonObject body) {
+    	
+    	String url = SUPABASE_URL +"/rest/v1/" + tableName ;
+    	
+    	RequestBody jsonBody = RequestBody.create(body.toString(), MediaType.get("application/json; charset=utf-8"));
+    	
+    	Request request = new Request.Builder()
+    			.url(url)
+    			.post(jsonBody)
+    			.addHeader("apikey", SUPABASE_KEY)
+    			.addHeader("Authorization", "Bearer " + SUPABASE_KEY)
+    			.addHeader("Content-Type", "application/json")
+    			.build();
+    	
+    	try (Response response = client.newCall(request).execute()) {
+    		if (response.isSuccessful()) {
+    			return ResponseEntity.ok("Supabase 업데이트 성공");
+    		} else {
+    			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Supabase 업데이트 실패: " + response.message());
+    		}
+    	} catch (Exception e) {
+    		return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Supabase 요청 중 오류 발생: " + e.getMessage());
+    	}
+    }
+    
+
+    // OpenHTMLToPDF로 PDF 변환 후 googlrDrive 업로드 
+    public void createPDF(HashMap<String, Object> custMap,HashMap<String, Object> 
+    										pdfMap,HashMap<String, Object> mailMap,String googleAccessToken) {
 
     	String custCd 	  = (String) custMap.get("cust_cd");
     	String custNm 	  = (String) custMap.get("cust_nm");
@@ -156,60 +178,39 @@ public class CommonUtil {
 	 	// Html Making Start
     	StringBuilder content = new StringBuilder("<html>");
         content.append("<head><style>")
-        .append("body { font-family: 'NotoSansKR'; }")
+        .append("body { "
+        		+ "font-family: 'MaruBuri'; "
+        		+ "color: #000;"
+        		+ "font-size: 14px;"
+        		+ "text-align: center;"
+        		+ "}")
         .append("</style></head>")
 		.append("<body>")
-		.append("<p>제목</p>")
+		.append("<h1>")
+		.append("제목11")
+		.append("</h1>")
 		.append(pdfFormDetail)
 		.append("</body></html>");
 		 
-		String filePath = "C:\\Users\\User\\Desktop\\fileTest\\"+custCd +custNm+".pdf";
-		
-		try (FileOutputStream os = new FileOutputStream(filePath)) {
+        String fileName = custCd +custNm+".pdf";
+        
+		try {
+			
+			ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 			PdfRendererBuilder builder = new PdfRendererBuilder();
+
 			builder.useFastMode();
 			builder.withHtmlContent(content.toString(), null);
-			builder.useFont(new File("C:\\Users\\User\\git\\eSignify\\NotoSansKR-VariableFont_wght.ttf"), "NotoSansKR");
-			builder.toStream(os);
+			builder.useFont(new File("C:\\Users\\User\\git\\eSignify\\MaruBuri-Regular.ttf"), "MaruBuri");
+			builder.toStream(outputStream);
 			builder.run();
 			System.out.println("PDF 생성 완료: ");
+			
+			googleDriveUploader.uploadPdfToDrive(outputStream, custCd +custNm,googleAccessToken);
+			
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		
-		return filePath;
 
     }
-    
-//    public String createRawEmail(String to, String subject, String bodyText) {
-//    	 // SMTP 설정
-//        Properties props = new Properties();
-//        props.put("mail.smtp.auth", "true");
-//        props.put("mail.smtp.starttls.enable", "true");
-//        props.put("mail.smtp.host", "smtp.gmail.com");
-//        props.put("mail.smtp.port", "587");
-//
-//        // 인증 추가
-//        Session session = Session.getInstance(props, new Authenticator() {
-//            @Override
-//            protected PasswordAuthentication getPasswordAuthentication() {
-//                return new PasswordAuthentication("your_email@gmail.com", "your_password");
-//            }
-//        });
-//
-//        try {
-//            // MIME 메시지 생성
-//            MimeMessage mimeMessage = new MimeMessage(session);
-//            mimeMessage.setFrom(new InternetAddress("your_email@gmail.com"));
-//            mimeMessage.addRecipient(MimeMessage.RecipientType.TO, new InternetAddress("recipient@example.com"));
-//            mimeMessage.setSubject("Test Email");
-//            mimeMessage.setText("This is a test email body.");
-//
-//            System.out.println("MimeMessage created successfully.");
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//        }
-//    }
-
-
 }
