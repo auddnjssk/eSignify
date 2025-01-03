@@ -35,9 +35,6 @@ public class CommonUtil {
 	@Value("${SUPABASE_KEY}")
 	private String SUPABASE_KEY;
 	
-	@Autowired
-	GoogleDriveUploader googleDriveUploader;
-	
 	private final OkHttpClient client = new OkHttpClient();
 
 	// 랜덤으로 비밀 키 생성 (32 바이트, 256비트)
@@ -160,57 +157,5 @@ public class CommonUtil {
     		return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Supabase 요청 중 오류 발생: " + e.getMessage());
     	}
     }
-    
 
-    // OpenHTMLToPDF로 PDF 변환 후 googlrDrive 업로드 
-    public void createPDF(HashMap<String, Object> custMap,HashMap<String, Object> 
-    										pdfMap,HashMap<String, Object> mailMap,String googleAccessToken) {
-
-    	String custCd 	  = (String) custMap.get("cust_cd");
-    	String custNm 	  = (String) custMap.get("cust_nm");
-    	String custGooId = (String) custMap.get("cust_gooid");
-    	
-    	// 텍스트 콘텐츠
-    	String pdfFormDetail = (String) pdfMap.get("form_detail");
-	 
-    	pdfFormDetail = pdfFormDetail.replaceAll("&nbsp;", "&#160;");
-    			 
-	 	// Html Making Start
-    	StringBuilder content = new StringBuilder("<html>");
-        content.append("<head><style>")
-        .append("body { "
-        		+ "font-family: 'MaruBuri'; "
-        		+ "color: #000;"
-        		+ "font-size: 14px;"
-        		+ "text-align: center;"
-        		+ "}")
-        .append("</style></head>")
-		.append("<body>")
-		.append("<h1>")
-		.append("제목11")
-		.append("</h1>")
-		.append(pdfFormDetail)
-		.append("</body></html>");
-		 
-        String fileName = custCd +custNm+".pdf";
-        
-		try {
-			
-			ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-			PdfRendererBuilder builder = new PdfRendererBuilder();
-
-			builder.useFastMode();
-			builder.withHtmlContent(content.toString(), null);
-			builder.useFont(new File("C:\\Users\\User\\git\\eSignify\\MaruBuri-Regular.ttf"), "MaruBuri");
-			builder.toStream(outputStream);
-			builder.run();
-			System.out.println("PDF 생성 완료: ");
-			
-			googleDriveUploader.uploadPdfToDrive(outputStream, custCd +custNm,googleAccessToken);
-			
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-
-    }
 }

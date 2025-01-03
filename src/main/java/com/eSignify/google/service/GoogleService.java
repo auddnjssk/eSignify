@@ -2,19 +2,16 @@ package com.eSignify.google.service;
 
 import java.util.Base64;
 import java.util.HashMap;
+import java.util.Map;
 
-import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
-import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
@@ -40,77 +37,28 @@ public class GoogleService {
 	
 	String tokenUrl = "https://oauth2.googleapis.com/token";
 	
-    public ResponseEntity<String> getGoogleToken(String authorizationCode) {
-    	
-	    HttpHeaders headers = new HttpHeaders();
-	    headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
-
-	    MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
-	    params.add("code", authorizationCode);
-	    params.add("client_id", clientId);
-	    params.add("client_secret", clientSecret);
-	    params.add("redirect_uri", redirectUri);
-	    params.add("grant_type", "authorization_code");
-
-	    HttpEntity<MultiValueMap<String, String>> entity = new HttpEntity<>(params, headers);
-
-	    try {
-	        ResponseEntity<String> response = restTemplate.exchange(tokenUrl, HttpMethod.POST, entity, String.class);
-
-	        if (response.getStatusCode().is2xxSuccessful()) {
-	            JSONObject json = new JSONObject(response.getBody());
-	            String accessToken = json.getString("access_token");
-	            String refreshToken = json.getString("refresh_token");
-
-                // Create HttpOnly cookies
-                ResponseCookie accessCookie = ResponseCookie.from("access_token", accessToken)
-                        .httpOnly(true)
-                        .secure(true) // Use HTTPS in production
-                        .path("/")
-                        .maxAge(3600) // Access Token validity
-                        .build();
-                
-                ResponseCookie refreshCookie = ResponseCookie.from("refresh_token", refreshToken)
-                        .httpOnly(true)
-                        .secure(true)
-                        .path("/")
-                        .maxAge(2592000) // 30 days validity for Refresh Token
-                        .build();
-                
-
-	            // 성공 로그
-	            System.out.println("Access Token: " + accessToken);
-	            return ResponseEntity.ok("Login successful");
-	        } else {
-	            System.err.println("Error Response: " + response.getBody());
-	            throw new RuntimeException("Failed to get access token: " + response.getBody());
-	        }
-	    } catch (HttpClientErrorException e) {
-	        System.err.println("HTTP Status: " + e.getStatusCode());
-	        System.err.println("Response Body: " + e.getResponseBodyAsString());
-	        throw new RuntimeException("Failed to get access token: " + e.getResponseBodyAsString(), e);
-	    }
-	}
-    
-    public String refreshAccessToken(String refreshToken) {
-        String url = "https://oauth2.googleapis.com/token";
-
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
-
-        MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
-        params.add("client_id", "YOUR_CLIENT_ID");
-        params.add("client_secret", "YOUR_CLIENT_SECRET");
-        params.add("refresh_token", refreshToken);
-        params.add("grant_type", "refresh_token");
-
-        HttpEntity<MultiValueMap<String, String>> entity = new HttpEntity<>(params, headers);
+    public String  refreshAccessToken(String refreshToken) {
         RestTemplate restTemplate = new RestTemplate();
 
-        ResponseEntity<String> response = restTemplate.postForEntity(url, entity, String.class);
-        return response.getBody(); // 새로운 Access Token 반환
-    }
+        // 요청 파라미터 설정
+        Map<String, String> params = Map.of(
+                "client_id", clientId,
+                "client_secret", clientSecret,
+                "refresh_token", refreshToken,
+                "grant_type", "refresh_token"
+        );
 
+        // POST 요청
+        ResponseEntity<Map> response = restTemplate.postForEntity(tokenUrl, params, Map.class);
+
+        // 응답 처리
+        if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
+            Map<String, Object> body = response.getBody();
+            return (String) body.get("access_token");
+        }
+
+        throw new RuntimeException("Failed to refresh Google Access Token");
+	};
     
     /**
      * @param String accessToken,String pdfUrl, HashMap<String, Object> custMap
@@ -118,7 +66,7 @@ public class GoogleService {
      * @return ResponseEntity
      */
     public String sendEmail(String accessToken,String filePath, HashMap<String, Object> custMap
-    		,HashMap<String, Object> pdfMap ,HashMap<String, Object> mailMap) {
+    		,HashMap<String, Object> pdfMap ,HashMap<String, Object> mailMap, String fileId) {
     	
     	String url = "https://www.googleapis.com/gmail/v1/users/me/messages/send";
     	
@@ -129,8 +77,10 @@ public class GoogleService {
     	String subject 	  = (String) mailMap.get("form_title");
     	String bodyText   = (String) mailMap.get("form_detail");
     	
+    	
+    	
     	subject =  "=?utf-8?B?" + commonUtil.comEncode(subject)+ "?=";
-    	String rawMessage = createRawEmail(cust_kaid,subject, bodyText);
+    	String rawMessage = createRawEmail(cust_kaid,subject, bodyText,fileId);
     	
     	HttpHeaders headers = new HttpHeaders();
     	headers.setContentType(MediaType.APPLICATION_JSON);
@@ -142,7 +92,6 @@ public class GoogleService {
     	
     	try {
     		response = restTemplate.exchange(url, HttpMethod.POST, entity, String.class);
-
     		
     	}catch (HttpClientErrorException e) {
     		System.err.println("HTTP Status: " + e.getStatusCode());
@@ -171,13 +120,15 @@ public class GoogleService {
     	return response.getBody();
     }
 
-    private String createRawEmail(String to, String subject, String bodyText) {
+    private String createRawEmail(String to, String subject, String bodyText,String fileId) {
         try {
         	
             String raw = "To: " + to + "\r\n" +
                          "Subject: " + subject + "\r\n" +
                          "Content-Type: text/html; charset=utf-8\r\n\r\n" +
-                         bodyText;
+                         bodyText +
+                         "<br>"+ "<a href='http://localhost:8080/pdfAsImage?pdfPath=" + fileId + "'>계약서 서명하기</a>";
+                        
 
             // Base64 URL-safe 인코딩
             return Base64.getUrlEncoder().withoutPadding().encodeToString(raw.getBytes("UTF-8"));

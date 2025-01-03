@@ -8,9 +8,10 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 public class WebConfig implements WebMvcConfigurer {
     @Override
     public void addCorsMappings(CorsRegistry registry) {
-        registry.addMapping("/api/**")
-                .allowedOrigins("http://localhost:8080") // Vue.js 도메인
+        registry.addMapping("/**")
+                .allowedOrigins("http://localhost:8080") // Vue.js 二쇱냼
+                .allowedHeaders("*")
                 .allowedMethods("GET", "POST", "PUT", "DELETE")
-                .allowCredentials(true); // 자격 증명 허용 (쿠키 포함)
+                .allowCredentials(true); 
     }
 }

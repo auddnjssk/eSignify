@@ -9,6 +9,7 @@ import com.google.api.client.json.gson.GsonFactory;
 import com.google.api.services.drive.Drive;
 import com.google.api.services.drive.model.File;
 import com.google.api.services.drive.model.FileList;
+import com.google.api.services.drive.model.Permission;
 
 import java.io.ByteArrayOutputStream;
 import java.util.Collections;
@@ -22,8 +23,10 @@ public class GoogleDriveUploader {
     private static final JsonFactory JSON_FACTORY = GsonFactory.getDefaultInstance();
     private static final HttpTransport HTTP_TRANSPORT = new NetHttpTransport();
 
-    public static void uploadPdfToDrive(ByteArrayOutputStream pdfOutputStream, String fileName, String accessToken) throws Exception {
-        // Access Token을 사용하여 HttpRequestInitializer 생성
+    // 
+    public static String uploadPdfToDrive(ByteArrayOutputStream pdfOutputStream, String fileName, String accessToken) throws Exception {
+        
+    	// Access Token을 사용하여 HttpRequestInitializer 생성
         HttpRequestInitializer requestInitializer = request -> {
             request.setInterceptor(request1 -> request1.getHeaders().setAuthorization("Bearer " + accessToken));
         };
@@ -48,8 +51,24 @@ public class GoogleDriveUploader {
         File file = service.files().create(fileMetadata, mediaContent)
                 .setFields("id")
                 .execute();
-        //contract
-        System.out.println("File ID: " + file.getId());
+        
+        String fileId = file.getId();
+        
+        // 파일 공유 설정
+        Permission permission = new Permission();
+        permission.setType("anyone"); // 모든 사용자에게 공유
+        permission.setRole("reader"); // 읽기 전용 권한
+
+        service.permissions().create(fileId, permission)
+                .setFields("id")
+                .execute();
+
+        // 공유 URL 생성
+        //String sharedUrl = "https://drive.google.com/file/d/" + fileId + "/view";
+        System.out.println("fileId : " + fileId);
+        
+        return fileId;
+        
     }
     
     // 폴더 검색 메서드
