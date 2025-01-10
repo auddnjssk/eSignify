@@ -1,24 +1,19 @@
 package com.eSignify.common;
 
-import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.security.SecureRandom;
 import java.util.Base64;
-import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 
-import com.eSignify.google.service.GoogleDriveUploader;
 import com.eSignify.model.LoginResponse;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.JsonObject;
-import com.openhtmltopdf.pdfboxout.PdfRendererBuilder;
 
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
@@ -57,7 +52,7 @@ public class CommonUtil {
     }
 
     // SupaBase Select 메소드
-    public List<LoginResponse> supaBaseSelect(String action , String tableName,String condition){
+    public List<Map<String,Object>> supaBaseSelect(String tableName,String condition){
     	
     	String responseData;
     	
@@ -65,7 +60,7 @@ public class CommonUtil {
         ObjectMapper objectMapper = new ObjectMapper();
 
         // JSON을 Get하기위해 객체로 변환
-        List<LoginResponse> jsonResponse ;
+        List<Map<String, Object>> ListResponse ;
         
     	String urlAdd = "/rest/v1/" + tableName + "?"+condition;
     	
@@ -89,14 +84,14 @@ public class CommonUtil {
             if (response.isSuccessful()) {
                 // 요청 성공 시 응답 데이터 출력
                 responseData = response.body().string();
-                jsonResponse = objectMapper.readValue(responseData, new TypeReference<List<LoginResponse>>() {});
+                ListResponse = objectMapper.readValue(responseData, new TypeReference<List<Map<String,Object>>>() {});
                 
-                return jsonResponse;
+                return ListResponse;
             } else {
                 // 요청 실패 시 오류 코드 및 메시지 출력
             	responseData = "오류 발생: " + response.code() + " - " + response.message();
-            	jsonResponse = objectMapper.readValue(responseData, new TypeReference<List<LoginResponse>>() {});
-                return jsonResponse;
+            	ListResponse = objectMapper.readValue(responseData, new TypeReference<List<Map<String,Object>>>() {});
+                return ListResponse;
             }
         } catch (Exception e) {
             e.printStackTrace();

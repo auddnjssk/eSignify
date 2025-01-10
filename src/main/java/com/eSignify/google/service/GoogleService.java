@@ -1,5 +1,9 @@
 package com.eSignify.google.service;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
@@ -16,7 +20,11 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
 import com.eSignify.common.CommonUtil;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+
+import jakarta.servlet.http.HttpSession;
 
 @Service
 public class GoogleService {
@@ -120,7 +128,7 @@ public class GoogleService {
     	return response.getBody();
     }
 
-    private String createRawEmail(String to, String subject, String bodyText,String fileId) {
+    public String createRawEmail(String to, String subject, String bodyText,String fileId) {
         try {
         	
             String raw = "To: " + to + "\r\n" +
@@ -135,6 +143,54 @@ public class GoogleService {
         } catch (Exception e) {
             throw new RuntimeException("Error creating raw email", e);
         }
+    }
+    
+    
+    public Map<String, Object> setUserInfoSession(String accessToken,HttpSession session) {
+    	
+    	String userInfoUrl = "https://www.googleapis.com/oauth2/v3/userinfo";
+    	JsonObject jsonResponse = null ;
+    	Map<String, Object> jsonMap = null;
+    	
+    	try {
+            // 사용자 정보 요청 URL 생성
+            URL url = new URL(userInfoUrl);
+            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+            connection.setRequestMethod("GET");
+            connection.setRequestProperty("Authorization", "Bearer " + accessToken);
+
+            // 응답 읽기
+            BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+            String inputLine;
+            StringBuilder response = new StringBuilder();
+
+            while ((inputLine = in.readLine()) != null) {
+                response.append(inputLine);
+            }
+            in.close();
+
+            // 응답을 JSON으로 변환 (Gson 사용)
+            String responseBody = response.toString();
+            jsonResponse = JsonParser.parseString(responseBody).getAsJsonObject();
+
+
+            session.setAttribute("GoogleUserId", jsonResponse.get("sub").getAsString());
+            session.setAttribute("userName", jsonResponse.get("name").getAsString());
+            session.setAttribute("userPicture", jsonResponse.get("picture").getAsString());
+            session.setAttribute("email", jsonResponse.get("email").getAsString());
+            
+            ObjectMapper objectMapper = new ObjectMapper();
+            
+            jsonMap = objectMapper.readValue(jsonResponse.toString(), Map.class);
+
+            
+            
+            return jsonMap;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return jsonMap;
+        }
+		
     }
 
 }

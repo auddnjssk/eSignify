@@ -1,12 +1,9 @@
 package com.eSignify.google.domain;
 
-import java.awt.image.BufferedImage;
 import java.io.File;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,13 +26,15 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
 import com.eSignify.common.CommonUtil;
+import com.eSignify.common.MessageHttpResponse;
 import com.eSignify.common.PdfService;
+import com.eSignify.common.ResponseDTO;
 import com.eSignify.google.entity.SendMailEntity;
 import com.eSignify.google.service.GoogleService;
 import com.eSignify.model.KakaoUserDTO;
 import com.eSignify.model.LoginResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.api.services.drive.Drive;
+import com.google.gson.JsonObject;
 
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.servlet.http.HttpServletRequest;
@@ -54,6 +53,9 @@ public class GoogleController {
 	@Autowired
 	PdfService pdfService;
 	
+	@Autowired
+	MessageHttpResponse messageHttpResponse;
+	
 	@Value("${my.client_id}")
 	private String clientId;
 	
@@ -63,14 +65,15 @@ public class GoogleController {
 	@Value("${my.client_secret}")
 	private String clientSecret;
 	
+	
 	String tokenUrl = "https://oauth2.googleapis.com/token";
+	
 	private final RestTemplate restTemplate = new RestTemplate();
-	
-	
 	
     @GetMapping("/oauth/google")
     @Operation(summary = "구글 oAuth2.0 리다이렉션", description = "Access Token, RefreshToken을 쿠키에 셋팅")
-    public ResponseEntity<String> redirect(@RequestParam String code,HttpServletResponse response,HttpServletRequest request) throws Exception {
+    public ResponseEntity<?> redirect(@RequestParam String code,HttpServletResponse response,
+    		HttpServletRequest request,HttpSession session) throws Exception {
     	
     	HttpHeaders headers = new HttpHeaders();
 	    headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
@@ -91,42 +94,62 @@ public class GoogleController {
 	            JSONObject json = new JSONObject(tokenResponse.getBody());
 	            String accessToken = json.getString("access_token");
 	            String refreshToken = json.getString("refresh_token");
-
-                // Create cookies
-	            jakarta.servlet.http.Cookie googleAccess= new jakarta.servlet.http.Cookie("googleAccess", accessToken);
-	            googleAccess.setHttpOnly(true);
-	            googleAccess.setSecure(true); 
-	            googleAccess.setPath("/");
-	            googleAccess.setMaxAge(3600 * 8); // 토큰 유호시간 8시간
 	            
-	            jakarta.servlet.http.Cookie googleRefresh= new jakarta.servlet.http.Cookie("googleRefresh", refreshToken);
-	            googleRefresh.setHttpOnly(true);
-	            googleRefresh.setSecure(true); 
-	            googleRefresh.setPath("/");
-	            googleRefresh.setMaxAge(3600 * 8); // 토큰 유호시간 8시간
-                
-	            response.addCookie(googleAccess);
-	            response.addCookie(googleRefresh);
+	            // Token으로 User정보를 읽어옴
+	            Map<String,Object> jsonResponse = googleService.setUserInfoSession(accessToken,session);
 	            
-	            // 성공 로그
-	            System.out.println("Access Token: " + accessToken);
-	            System.out.println("refreshToken Token: " + refreshToken);
+	            String tableName = "t_user";
+				String condition = "google_id=eq."+jsonResponse.get("sub");
+				List<Map<String, Object>> selectList = commonUtil.supaBaseSelect(tableName, condition);
+				
+				
+				if(selectList.size() > 0) {
+					
+	                // Create cookies
+		            jakarta.servlet.http.Cookie userId= new jakarta.servlet.http.Cookie("userId", (String) selectList.get(0).get("user_id"));
+		            userId.setHttpOnly(true);
+		            userId.setSecure(true); 
+		            userId.setPath("/");
+		            userId.setMaxAge(3600 * 8); // 토큰 유호시간 8시간
+		            
+		            // Create cookies
+		            jakarta.servlet.http.Cookie googleAccess= new jakarta.servlet.http.Cookie("googleAccess", accessToken);
+		            googleAccess.setHttpOnly(true);
+		            googleAccess.setSecure(true); 
+		            googleAccess.setPath("/");
+		            googleAccess.setMaxAge(3600 * 8); // 토큰 유호시간 8시간
+		            
+		            jakarta.servlet.http.Cookie googleRefresh= new jakarta.servlet.http.Cookie("googleRefresh", refreshToken);
+		            googleRefresh.setHttpOnly(true);
+		            googleRefresh.setSecure(true); 
+		            googleRefresh.setPath("/");
+		            googleRefresh.setMaxAge(3600 * 8); // 토큰 유호시간 8시간
+	                
+		            response.addCookie(userId);
+		            response.addCookie(googleAccess);
+		            response.addCookie(googleRefresh);
+		            
+		           
+		            
+		            ResponseDTO responseDTO = new ResponseDTO.Builder()
+		                    .setMessage("googleLoginSuccess")
+		                    .setResult(jsonResponse)
+		                    .setStatusCode(200)
+		                    .build();
+		            
+		            return messageHttpResponse.success(responseDTO);
+		            
+				}else { // 해당 구글Id와 연동된 아이디가 없어서 회원가입 GO
+					ResponseDTO responseDTO = new ResponseDTO.Builder()
+		                    .setMessage("notConnectGoogle")
+		                    .setResult(jsonResponse)
+		                    .setStatusCode(200)
+		                    .build();
+					
+		            return messageHttpResponse.success(responseDTO);
+				}
+				
 	            
-	            		
-	            // 현재 요청의 프로토콜, 호스트, 포트 가져오기
-	            String scheme = request.getScheme(); // http or https
-	            String serverName = request.getServerName(); // localhost or domain
-	            int serverPort = request.getServerPort(); // 8080 or port number
-
-	            // 절대 경로 생성
-	            String redirectUrl = scheme + "://" + serverName + ":" + serverPort + "/login-success";
-
-	            HttpHeaders hd = new HttpHeaders();
-	            headers.add("Location", redirectUrl);
-	            
-	            
-	            return new ResponseEntity<>(hd, HttpStatus.FOUND); // HTTP 302 리다이렉션
-
 	        } else {
 	            System.err.println("Error Response: " + tokenResponse.getBody());
 	            throw new RuntimeException("Failed to get access token: " + tokenResponse.getBody());
@@ -181,7 +204,7 @@ public class GoogleController {
             HttpSession session = request.getSession();
             String userId = (String) session.getAttribute("userId");
             
-            List<LoginResponse> selectResponse= commonUtil.supaBaseSelect("", tableName,condition);
+            List<Map<String,Object>> selectResponse= commonUtil.supaBaseSelect(tableName,condition);
             
     		
             if (selectResponse != null) {
@@ -267,6 +290,16 @@ public class GoogleController {
     	} catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
         }
+    }
+    
+    @GetMapping("/ttest")
+    @Operation(summary = "Pdf파일을 Image로 변환하여 Return", description = "")
+    public List<Map<String, Object>> testCont(){
+    		String tableName = "t_user";
+			String condition = "google_id=eq.105714069786937135539";
+			List<Map<String, Object>> list = commonUtil.supaBaseSelect(tableName, condition);
+    		
+    		return list;
     }
     
 }

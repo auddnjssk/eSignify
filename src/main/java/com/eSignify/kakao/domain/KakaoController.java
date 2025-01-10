@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
 
 @RestController
@@ -53,7 +54,7 @@ public class KakaoController {
             HttpSession session = request.getSession();
             String userId = (String) session.getAttribute("userId");
             
-            List<LoginResponse> selectResponse= comUtil.supaBaseSelect("", tableName,condition);
+            List<Map<String,Object>> selectResponse= comUtil.supaBaseSelect(tableName,condition);
             
     		
             if (selectResponse != null) {
