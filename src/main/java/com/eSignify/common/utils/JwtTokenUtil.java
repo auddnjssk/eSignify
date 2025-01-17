@@ -1,4 +1,5 @@
 package com.eSignify.common.utils;
+import java.security.Key;
 import java.util.Base64;
 import java.util.Date;
 import java.util.Map;
@@ -38,6 +39,7 @@ public class JwtTokenUtil {
         return Jwts.builder()
                 .setSubject((String) userInfoMap.get("userId"))                  // 사용자 ID (sub)
                 .claim("userName", (String) userInfoMap.get("user_nm"))          // 사용자 이름 (custom claim)
+                .claim("userId", (String) userInfoMap.get("user_id"))          // 사용자 이름 (custom claim)
                 .setIssuedAt(now)                    // 발급 시간 (iat)
                 .setExpiration(expiryDate)           // 만료 시간 (exp)
                 .signWith(secretKey, SignatureAlgorithm.HS256)  // SecretKey를 사용하여 서명
@@ -67,11 +69,16 @@ public class JwtTokenUtil {
     
     // JWT 토큰에서 사용자 ID 추출
     public String getUserIdFromToken(String token) {
-        Claims claims = Jwts.parser()
-                .setSigningKey(jwtSecretKey)          // 비밀 키로 서명 검증
-                .parseClaimsJws(token)              // 토큰 파싱
+    	
+	    Key key = Keys.hmacShaKeyFor(jwtSecretKey.getBytes());
+
+        Claims claims = Jwts.parserBuilder()
+                .setSigningKey(key)           // 비밀 키로 서명 검증
+                .build()
+                .parseClaimsJws(token)       // 토큰 파싱
                 .getBody();
-        return claims.getSubject();  // 사용자 ID 반환
+        
+        return claims.get("userId").toString();
     }
 
     // 유효성 검증

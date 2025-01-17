@@ -146,7 +146,33 @@ public class CommonUtil {
     		if (response.isSuccessful()) {
     			return ResponseEntity.ok("Supabase 업데이트 성공");
     		} else {
+    			System.out.println(("Supabase 업데이트 실패: " + response.message()));
     			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Supabase 업데이트 실패: " + response.message());
+    		}
+    	} catch (Exception e) {
+    		return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Supabase 요청 중 오류 발생: " + e.getMessage());
+    	}
+    }
+    
+    // SupaBase delete 메소드
+    public ResponseEntity<String> supaBaseDelete(String tableName,String condition) {
+    	
+    	String url = SUPABASE_URL +"/rest/v1/" + tableName +"?"+condition;
+    	
+    	Request request = new Request.Builder()
+    			.url(url)
+    			.delete()
+    			.addHeader("apikey", SUPABASE_KEY)
+    			.addHeader("Authorization", "Bearer " + SUPABASE_KEY)
+    			.addHeader("Content-Type", "application/json")
+    			.build();
+    	
+    	try (Response response = client.newCall(request).execute()) {
+    		if (response.isSuccessful()) {
+    			return ResponseEntity.ok("Supabase 삭제 성공");
+    		} else {
+    			System.out.println(("Supabase 삭제 실패: " + response.message()));
+    			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Supabase 삭제 실패: " + response.message());
     		}
     	} catch (Exception e) {
     		return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Supabase 요청 중 오류 발생: " + e.getMessage());
